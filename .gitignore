@@ -22,5 +22,11 @@ train_derain.py
 train_goprol.py 
 model_test.py 
 make_file.py 
-*.sh 
+# *.sh 
+goprol_train*.sh 
+final_train1.sh 
+inference_ddp.sh 
+pretrain_train.sh 
+test_result.sh 
+
 
