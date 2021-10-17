@@ -66,3 +66,16 @@ python -W ignore inference_ddp.py \
 ```
 python utils/calc_psnr_ssim_official.py
 ```
+
+If you find this repo useful for your research, please consider citing the papers
+```
+@InProceedings{
+  Zou_2021_ICCV, 
+  author = {Zou, Wenbin and Jiang, Mingchao and Zhang, Yunchen and Chen, Liang and Lu, Zhiyong and Wu, Yi}, 
+  title = {SDWNet: A Straight Dilated Network With Wavelet Transformation for Image Deblurring}, 
+  booktitle = {Proceedings of the IEEE/CVF International Conference on Computer Vision (ICCV) Workshops}, 
+  month = {October}, 
+  year = {2021}, 
+  pages = {1895-1904} 
+  }
+```

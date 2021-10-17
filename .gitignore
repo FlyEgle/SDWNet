@@ -19,6 +19,7 @@ filter_pil.py
 train_resume.py 
 train_deep.py 
 train_derain.py 
+final_train.sh
 # train_goprol.py
 train.py 
 model_test.py 
