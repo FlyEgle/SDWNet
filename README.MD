@@ -31,7 +31,7 @@ This repo is not only used for our paper(SDWNet) but also used for Deblur codeba
   |- optim
   |   |- optimizer.py                           -> Optimizer function define.
   |- train.py                                   -> Training.
-  |- final_train.sh                             -> Training shell.
+  |- goprol_train.sh                             -> Training shell.
   |- inference_ddp.py                           -> Inference.
   |- inference_ddp.sh                           -> Inference shell.
 
