@@ -25,7 +25,7 @@ This repo is not only used for our paper(SDWNet) but also used for Deblur codeba
   |    - NTIRE2021_Deblur
   |        - uniA_ELU
   |            |- layerlib_stage1               -> Model module.
-  |            |- model_stage1_Upsample_Deep.py -> Main model.
+  |            |- model_stage1_dual_branch_tail.py -> Main model.
   |- loss
   |   |- gendrator_loss.py                      -> Loss function define.
   |- optim
@@ -40,7 +40,7 @@ This repo is not only used for our paper(SDWNet) but also used for Deblur codeba
 - Crop the src Training LR and HR images to 480x480 by sliding window which step is 240, so we got 24 patchs form one 720x1280 images both LR and HR.
 - Training the model with the 416 x 416 size, use randomcrop, RGB shuffle, horizon flip, rotate and so on.
 - Normalize the images to Tensor with 255 but not 1. which without process the mean and std.
-```shell
+```bash
 python -W ignore train.py \
 --config_file $config_folder \
 --dist-url 'tcp://127.0.0.1:8888' \
@@ -51,7 +51,7 @@ python -W ignore train.py \
 ```
 # 4. Inference
 - Inference the src LR images and get the SR images
-```shell
+```bash
 python -W ignore inference_ddp.py \
 --config_file $config_folder \
 --dist-url 'tcp://127.0.0.1:8989' \
