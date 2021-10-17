@@ -8,21 +8,29 @@ from __future__ import print_function
 
 from optim.optimizer import Optimizer, adjust_learning_rate_for_cosine_decay
 from config.Config import Config
-from loss.generator_loss import L1_Charbonnier, MS_SSIM, SSIM
+from loss.generator_loss import L1_Charbonnier, MS_SSIM, SSIM, EdgeLoss2, PerceptualLoss
 from data.utils import PSNR, Metric_rank, BatchAug
 from data.vanilar_dataset import NTIRE_Track2
 from data.augments import *
 from datetime import datetime
 
-# from model.NTIRE2020_Deblur_top.uniA.model_stage1 import AtrousNet
+from model.NTIRE2020_Deblur_top.uniA.model_stage1 import AtrousNet
 from model.NTIRE2021_Deblur.CARN.CARN import Net as CARNNet
 from model.NTIRE2021_Deblur.uniA_ELU.model_stage1 import AtrousNet as AtrousNetElu
 from model.NTIRE2021_Deblur.uniA_ELU.model_stage1_Upsample_Deep import AtrousNet_billinear_Wide as AtrousNetEluUpWide
+# dilation
+from model.NTIRE2021_Deblur.uniA_ELU.model_stage1_Upsample_Deep_dilated import AtrousNet_billinear_Wide_dilated as AtrousNetEluUpWideDlidation
 # wavelet with crop
 from model.NTIRE2021_Deblur.uniA_ELU.wavelet_deblur_remix import AtrousNet_wavlet_remix
 from model.NTIRE2021_Deblur.uniA_ELU.wavelet_SRCNN_remix import SRCNN
+from model.NTIRE2021_Deblur.uniA_ELU.model_dilation_with_srcnn import AtrousNet_billinear_Wide_dilated_srcnn, AtrousNet_billinear_Wide_dilated_srcnn_output
+# wavelet after the upsample layer
+from model.NTIRE2021_Deblur.uniA_ELU.model_stage1_dual_branch_tail import AtrousNet_SRCNN_tail
+from model.NTIRE2021_Deblur.uniA_ELU.model_stage1_dual_branch_tail_no_upsample_elu import AtrousNet_SRCNN_tail_no_upsample_elu
+from model.NTIRE2021_Deblur.uniA_ELU.model_stage1_EfficientAttention import AtrousNet_billinear_EfficientAttention
+from model.NTIRE2021_Deblur.uniA_ELU.model_stage1_ContextBlock import AtrousNet_billinear_ContextBlock
 from utils.calc_psnr_for_val import get_psnr
-# from model.NTIRE2020_Deblur_top.uniA.model_stage1 import AtrousNet>>>>>>> master
+
 from torch.nn.parallel import DataParallel
 from torch.nn.parallel import DistributedDataParallel as DDP
 from apex.parallel import DistributedDataParallel as AMPDDP
@@ -146,11 +154,66 @@ def main_worker(gpu, ngpus_per_node, args):
     elif cfg.MODEL.BACKBONE.NAME == "AtrousNetElu":
         model = AtrousNetElu(3, 3)
     elif cfg.MODEL.BACKBONE.NAME == "AtrousNetEluUpWide":
-        model = AtrousNetEluUpWide(3, 3)
+        model = AtrousNetEluUpWide(3, 3,
+                        num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+                        d_mult=cfg.MODEL.BACKBONE.WIDTH)
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNetEluUpWideDlidation":
+        model = AtrousNetEluUpWideDlidation(3, 3,
+                        num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+                        d_mult=cfg.MODEL.BACKBONE.WIDTH)
     elif cfg.MODEL.BACKBONE.NAME == "AtrousNetEluUpWideWaveletRemix":
         model = AtrousNet_wavlet_remix(3, 3)
     elif cfg.MODEL.BACKBONE.NAME == "waveletSrcnn":
         model = SRCNN(3)
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNet_billinear_Wide_dilated_srcnn":
+        model = AtrousNet_billinear_Wide_dilated_srcnn(
+                3,
+                3,
+                num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+                d_mult=cfg.MODEL.BACKBONE.WIDTH
+            )
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNet_SRCNN_tail":
+        model = AtrousNet_SRCNN_tail(
+            3,
+            3,
+            num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+            d_mult=cfg.MODEL.BACKBONE.WIDTH,
+            efficientattention=cfg.MODEL.BACKBONE.EFFICIENT_ATTENTION,
+            gcattention=cfg.MODEL.BACKBONE.GC_ATTENTION
+        )
+
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNet_SRCNN_tail_no_upsample_elu":
+        model = AtrousNet_SRCNN_tail_no_upsample_elu(
+            3,
+            3,
+            num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+            d_mult=cfg.MODEL.BACKBONE.WIDTH
+        )
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNet_dilation_effiattention":
+        model = AtrousNet_billinear_EfficientAttention(
+            3,
+            3,
+            num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+            d_mult=cfg.MODEL.BACKBONE.WIDTH
+        )
+
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNet_dilation_gc":
+        model = AtrousNet_billinear_ContextBlock(
+            3,
+            3,
+            num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+            d_mult=cfg.MODEL.BACKBONE.WIDTH
+        )
+
+    # two output reuslt
+    elif cfg.MODEL.BACKBONE.NAME == "AtrousNet_billinear_Wide_dilated_srcnn_output":
+        model = AtrousNet_billinear_Wide_dilated_srcnn_output(
+            3, 3,
+            num_blocks=cfg.MODEL.BACKBONE.NUM_BLOCKS,
+            d_mult=cfg.MODEL.BACKBONE.WIDTH,
+            srcnn_add=cfg.MODEL.SRCNN.ADD,
+            srcnn_smooth=cfg.MODEL.SRCNN.SMOOTH
+        )
 
 
     if cfg.MODEL.PRETRAIN:
@@ -159,7 +222,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # model = VDSR(in_channels=3, out_channels=3)
     if args.rank == 0:
         print("================{}=============".format(model_arch))
-        print(model)
+        # print(model)
     if torch.cuda.is_available():
         model.cuda(args.gpu)
 
@@ -190,16 +253,28 @@ def main_worker(gpu, ngpus_per_node, args):
 
     device = model.device
 
+    ssim_criterion = None
+    edge_criterion = None
+
+    vggloss = None
+
     if cfg.LOSS.MS_SSIM:
         ssim_criterion = MS_SSIM()
     elif cfg.LOSS.SSIM:
         ssim_criterion = SSIM()
 
+    if cfg.LOSS.EDGE_LOSS:
+        edge_criterion = EdgeLoss2()
+
     # loss
     if cfg.LOSS.L1_Charbonnier:
         criterion = L1_Charbonnier(eps=cfg.LOSS.EPS)
-    else:
+    elif cfg.LOSS.L1:
         criterion = torch.nn.L1Loss()
+
+    # vgg loss
+    if cfg.SRCNN_LOSS.VGG_LOSS or cfg.LOSS.VGG_LOSS:
+        vggloss = PerceptualLoss(vgg_type=cfg.SRCNN_LOSS.VGG_TYPE)
 
     # dataset
     train_dataset = NTIRE_Track2(cfg, train=True)
@@ -259,7 +334,7 @@ def main_worker(gpu, ngpus_per_node, args):
         # train for epoch
         batch_iter = train(cfg, train_loader, validation_loader, model, criterion, optimizer, batch_aug, epoch, args,
                             batch_iter, total_batch, train_batch, no_warmup_total_batch,
-                            log_writer, calculate_psnr, train_metric, denormalize, ssim_criterion,
+                            log_writer, calculate_psnr, train_metric, denormalize, ssim_criterion, edge_criterion, vggloss,
                             batch_count, batch_total_count)
 
         # control the validaiton calculate step
@@ -355,7 +430,12 @@ def draw_images(cfg, epoch, log_writer, lr_images, sr_images, hr_images, denorma
 
 def train(cfg, train_loader, validation_loader, model, criterion, optimizer, batch_aug, epoch, args,
             batch_iter, total_batch, train_batch, no_warmup_total_batch, log_writer,
-            calculate_psnr, train_metric, denormalize, ssim_criterion, batch_count, batch_total_count):
+            calculate_psnr, train_metric, denormalize,
+            ssim_criterion,
+            edge_criterion,
+            vggloss,
+            batch_count,
+            batch_total_count):
 
     model.train()
     device = model.device
@@ -387,18 +467,64 @@ def train(cfg, train_loader, validation_loader, model, criterion, optimizer, bat
         if cfg.DATAAUG.MIXUP or cfg.DATAAUG.CUTMIX or cfg.DATAAUG.CUTBLUR:
             lr_images, hr_images = batch_aug(lr_images, hr_images)
 
-        sr_images = model(lr_images)
-
-        if cfg.LOSS.MS_SSIM:
-            l1_losses = criterion(sr_images, hr_images)
-            ssim = ssim_criterion(sr_images, hr_images)
-            losses = (1 - cfg.LOSS.ALPHA) * l1_losses + cfg.LOSS.ALPHA *  (1 - ssim)
-        elif cfg.LOSS.SSIM:
-            l1_losses = criterion(sr_images, hr_images)
-            ssim = ssim_criterion(sr_images, hr_images)
-            losses = cfg.LOSS.ALPHA * l1_losses + cfg.LOSS.ALPHA * (1 - ssim)
+        if cfg.MODEL.BACKBONE.NAME == "AtrousNet_billinear_Wide_dilated_srcnn_output":
+            sr_images, srcnn_sr_images = model(lr_images)
         else:
-            losses = criterion(sr_images, hr_images)
+            sr_images = model(lr_images)
+
+        # loss function config
+
+        if cfg.LOSS.EDGE_LOSS:
+            if cfg.LOSS.SSIM:
+                l1_losses = criterion(sr_images, hr_images)
+                edge = edge_criterion(sr_images, hr_images)
+                ssim = ssim_criterion(sr_images, hr_images)
+                losses = cfg.LOSS.L1_ALPHA * l1_losses + cfg.LOSS.EDGE_ALPHA * edge + cfg.LOSS.SSIM_ALPHA * ssim
+
+            else:
+                l1_losses = criterion(sr_images, hr_images)
+                edge = edge_criterion(sr_images, hr_images)
+                losses = cfg.LOSS.L1_ALPHA * l1_losses + cfg.LOSS.EDGE_ALPHA * edge
+        else:
+            # cl1 + ms ssim
+            if cfg.LOSS.VGG_LOSS:
+                if cfg.LOSS.SSIM:
+                    l1_losses = criterion(sr_images, hr_images)
+                    ssim = ssim_criterion(sr_images, hr_images)
+                    vgg_loss = vggloss(sr_images, hr_images)
+                    losses = cfg.LOSS.L1_ALPHA * l1_losses + cfg.LOSS.SSIM_ALPHA * (1 - ssim) + cfg.LOSS.VGG_ALPHA * vgg_loss
+            else:
+                if cfg.LOSS.MS_SSIM:
+                    l1_losses = criterion(sr_images, hr_images)
+                    ssim = ssim_criterion(sr_images, hr_images)
+                    losses = cfg.LOSS.L1_ALPHA * l1_losses + cfg.LOSS.SSIM_ALPHA *  (1 - ssim)
+                # cl1 + ssim
+                elif cfg.LOSS.SSIM:
+                    l1_losses = criterion(sr_images, hr_images)
+                    ssim = ssim_criterion(sr_images, hr_images)
+                    losses = cfg.LOSS.L1_ALPHA * l1_losses + cfg.LOSS.SSIM_ALPHA * (1 - ssim)
+                # cl1 + negitive ssim
+                elif cfg.LOSS.NEGITIVE_SSIM :
+                    l1_losses = criterion(sr_images, hr_images)
+                    ssim = ssim_criterion(sr_images, hr_images)
+                    losses = cfg.LOSS.L1_ALPHA * l1_losses + -1 * cfg.LOSS.SSIM_ALPHA * ssim
+                # only cl1loss
+                else:
+                    losses = criterion(sr_images, hr_images)
+
+        # SRCNN LOSS
+        if cfg.SRCNN_LOSS.VGG_LOSS:
+            srcnn_vgg_losses = vggloss(srcnn_sr_images, hr_images)
+            srcnn_losses = cfg.SRCNN_LOSS.VGG_ALPHA * srcnn_vgg_losses
+
+        if cfg.SRCNN_LOSS.L1_Charbonnier and cfg.SRCNN_LOSS.VGG_LOSS:
+            srcnn_l1_losses = criterion(srcnn_sr_images, hr_images)
+            srcnn_vgg_losses = vggloss(srcnn_sr_images, hr_images)
+            srcnn_losses = cfg.SRCNN_LOSS.L1_ALPHA * srcnn_l1_losses + cfg.SRCNN_LOSS.VGG_ALPHA * srcnn_vgg_losses
+
+        # use the srcnn output with losses
+        if cfg.MODEL.BACKBONE.NAME == "AtrousNet_billinear_Wide_dilated_srcnn_output":
+            losses = losses + srcnn_losses * 0.1
 
         # loss regularization
         if cfg.TRAIN.GRAD_ACCUMULATE and cfg.TRAIN.STEP:
@@ -429,34 +555,86 @@ def train(cfg, train_loader, validation_loader, model, criterion, optimizer, bat
         train_metric["loss"].update(losses.data.item())
         train_metric["psnr"].update(batch_psnr.data.item())
         if args.rank == 0:
-            if cfg.LOSS.SSIM or cfg.LOSS.MS_SSIM:
-                print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} l1_loss: {:.4f} ssim: {:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
-                    epoch,
-                    cfg.TRAIN.MAX_EPOCHS,
-                    batch_idx,
-                    train_batch,
-                    batch_iter,
-                    total_batch,
-                    losses.data.item(),
-                    l1_losses.data.item(),
-                    ssim.data.item(),
-                    batch_psnr.data.item(),
-                    lr,
-                    batch_time,
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            if cfg.MODEL.BACKBONE.NAME == "AtrousNet_billinear_Wide_dilated_srcnn_output":
+                if cfg.SRCNN_LOSS.L1_Charbonnier:
+                    print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} l1_loss: {:.4f} ssim: {:.4f} srcnn_l1_loss: {:.4f} srcnn_vggloss:{:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
+                        epoch,
+                        cfg.TRAIN.MAX_EPOCHS,
+                        batch_idx,
+                        train_batch,
+                        batch_iter,
+                        total_batch,
+                        losses.data.item(),
+                        l1_losses.data.item(),
+                        ssim.data.item(),
+                        srcnn_l1_losses.item(),
+                        srcnn_vgg_losses.item(),
+                        batch_psnr.data.item(),
+                        lr,
+                        batch_time,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                else:
+                    print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} l1_loss: {:.4f} ssim: {:.4f} srcnn_vggloss:{:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
+                        epoch,
+                        cfg.TRAIN.MAX_EPOCHS,
+                        batch_idx,
+                        train_batch,
+                        batch_iter,
+                        total_batch,
+                        losses.data.item(),
+                        l1_losses.data.item(),
+                        ssim.data.item(),
+                        srcnn_vgg_losses.item(),
+                        batch_psnr.data.item(),
+                        lr,
+                        batch_time,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
             else:
-                print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
-                    epoch,
-                    cfg.TRAIN.MAX_EPOCHS,
-                    batch_idx,
-                    train_batch,
-                    batch_iter,
-                    total_batch,
-                    losses.data.item(),
-                    batch_psnr.data.item(),
-                    lr,
-                    batch_time,
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                if cfg.LOSS.VGG_LOSS:
+                    print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} l1_loss: {:.4f} vggloss: {:.4f} ssim: {:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
+                        epoch,
+                        cfg.TRAIN.MAX_EPOCHS,
+                        batch_idx,
+                        train_batch,
+                        batch_iter,
+                        total_batch,
+                        losses.data.item(),
+                        l1_losses.data.item(),
+                        vgg_loss.data.item(),
+                        ssim.data.item(),
+                        batch_psnr.data.item(),
+                        lr,
+                        batch_time,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                elif cfg.LOSS.SSIM or cfg.LOSS.MS_SSIM:
+                    print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} l1_loss: {:.4f} ssim: {:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
+                        epoch,
+                        cfg.TRAIN.MAX_EPOCHS,
+                        batch_idx,
+                        train_batch,
+                        batch_iter,
+                        total_batch,
+                        losses.data.item(),
+                        l1_losses.data.item(),
+                        ssim.data.item(),
+                        batch_psnr.data.item(),
+                        lr,
+                        batch_time,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                else:
+                    print("Training Epoch: [{}/{}] batchidx:[{}/{}] batchiter: [{}/{}] batch_losses: {:.4f} psnr: {:.4f} LearningRate: {:.10f} Batchtime: {:.4f}s Datetime: {}".format(
+                        epoch,
+                        cfg.TRAIN.MAX_EPOCHS,
+                        batch_idx,
+                        train_batch,
+                        batch_iter,
+                        total_batch,
+                        losses.data.item(),
+                        batch_psnr.data.item(),
+                        lr,
+                        batch_time,
+                        datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
         if args.rank == 0:
             # batch record
@@ -517,7 +695,11 @@ def val(cfg, val_loader, model, criterion, epoch, total_epoch, args, log_writer,
 
         with torch.no_grad():
             start_time = time.time()
-            sr_images = model(lr_images)
+            if cfg.MODEL.BACKBONE.NAME == "AtrousNet_billinear_Wide_dilated_srcnn_output":
+                sr_images, _ = model(lr_images)
+            else:
+                sr_images = model(lr_images)
+
             batch_time = time.time() - start_time
 
             # losses

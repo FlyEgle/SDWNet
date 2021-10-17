@@ -8,7 +8,7 @@ metrics/*
 !metrics/metric_util.py 
 model/Image_SuperResolution
 model/MSPIR
-model/NTIRE2021_Deblur 
+model/NTIRE2021_Deblur_top
 model/uniA
 model/VDSR
 tools/test.py
@@ -19,14 +19,17 @@ filter_pil.py
 train_resume.py 
 train_deep.py 
 train_derain.py 
-train_goprol.py 
+# train_goprol.py
+train.py 
 model_test.py 
 make_file.py 
 # *.sh 
 goprol_train*.sh 
-final_train1.sh 
+# goprol_train.sh 
+final_train*.sh 
 inference_ddp.sh 
 pretrain_train.sh 
 test_result.sh 
+!goprol_train.sh 
 
 

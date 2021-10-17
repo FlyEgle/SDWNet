@@ -2,17 +2,17 @@
 
 
 # 1. Introduction
-This repo is not only used for our paper(SDWNet) but also used for Deblur databse. We implement a number of components that allow you to quickly implement your own model.
+This repo is not only used for our paper(SDWNet) but also used for Deblur codebase. We implement a number of components that allow you to quickly implement your own model.
 
 - **Paper**
-  The SDWNet has been accepted by iccvw2021, you can read the [paper](https://arxiv.org/abs/2110.05803) here.
+  The SDWNet has been accepted by **iccvw2021**, you can read the [paper](https://arxiv.org/abs/2110.05803) here.
 - **Model**
   ![](imgs/1.png)
 
 
 # 2. Folder Structure
 ```
-  ---SR_NTIRE2021
+  ---SDWNet
   |
   |- config
   |    |- model.yaml                            -> Model all traninig hyparameters with data log.
