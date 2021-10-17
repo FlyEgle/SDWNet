@@ -1,0 +1,78 @@
+# VDSR config for training
+MODEL:
+  PRETRAIN: False
+  WEIGHTS: "/data/jiangmingchao/data/output_ckpt_with_logs/AtrousNetEluUpWide_unia_416x416_adamw_cosine_l1closs_ssim_120_0.6_crop_data_LRX2/ckpt/SR-AtrousNet_best_loss_6.3994362354278564.pth"
+  BACKBONE:
+    NAME: "AtrousNetEluUpWide"
+    NUM_BLOCKS: 20
+    WIDTH: 24
+  ACTIVATION: "elu"
+LOSS:
+  L1_Charbonnier: True
+  L1: False
+  EPS: 0.001
+  EDGE_LOSS: False
+  MS_SSIM: False
+  SSIM: True
+  L1_ALPHA: 1
+  SSIM_ALPHA: 1
+  EDGE_ALPHA: 0.05
+TRAIN:
+  GRAD_ACCUMULATE: False
+  STEP: False
+  GRAD_ACCUMULATE_STEP: 2
+  MIX: False
+  FP16: False
+  LARS: False
+  SAMPLER: False
+  BATCH_SIZE: 48
+  BASE_LR: 0.0004
+  MOMENTUM: 0.9
+  COSINE: True
+  MAX_EPOCHS: 100
+  WARM_EPOCHS: 0
+  WEIGHT_DECAY: 0.0001
+  OPTIMIZER: "ADAMW"
+DATAAUG:
+  HFLIP: True
+  VFLIP: True
+  ROTATE: True
+  RGB: True
+  RANDOM_CROP: True
+  MIXUP: False
+  CUTMIX: False
+  CUTBLUR: False
+VALIDATION:
+  STEP: 50
+  USE: 1
+  BATCH_SIZE: 8
+  NUM_WORKERS: 8
+  INTERVAL: 1
+  ITER: 500
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/train_goprol_blur.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/train_goprol_sharp.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/test_goprol_blur.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/test_goprol_sharp.log"
+# RGB
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+PATCH:
+  STEP: 0
+  PATCH_SIZE: [96, 96]
+  MAX_NUMS: 400
+DATALOADER:
+  NUM_WORKERS: 12
+CHEKCPOINTS:
+  CKPT_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/goprol_wide_24_block_20/ckpt"
+  LOGS_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/goprol_wide_24_block_20/logs"
+DEBUG:
+  SHOW_SR_IMAGE: False
+  MAX_NUMBERS: 4
+  PADDING: 16

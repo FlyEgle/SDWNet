@@ -1,0 +1,93 @@
+# VDSR config for training
+MODEL:
+  PRETRAIN: False
+  WEIGHTS: ""
+  BACKBONE:
+    NAME: "AtrousNet_SRCNN_tail"
+    NUM_BLOCKS: 16
+    WIDTH: 32
+  SRCNN:
+    ADD: True
+    SMOOTH: True
+  ACTIVATION: "elu"
+LOSS:
+  L1_Charbonnier: True
+  L1: False
+  EPS: 0.001
+  EDGE_LOSS: False
+  MS_SSIM: False
+  SSIM: True
+  L1_ALPHA: 1
+  SSIM_ALPHA: 1
+  EDGE_ALPHA: 0.05
+  VGG_LOSS: False
+  VGG_ALPHA: 0.005
+SRCNN_LOSS:
+  L1_Charbonnier: False
+  EPS: 0.001
+  VGG_LOSS: False
+  VGG_ALPHA: 0.005
+  L1_ALPHA: 1
+  VGG_TYPE: "vgg16"
+TRAIN:
+  GRAD_ACCUMULATE: False
+  STEP: False
+  GRAD_ACCUMULATE_STEP: 2
+  MIX: False
+  FP16: False
+  LARS: True
+  SAMPLER: False
+  BATCH_SIZE: 4
+  BASE_LR: 0.0004
+  MOMENTUM: 0.9
+  COSINE: True
+  MAX_EPOCHS: 100
+  WARM_EPOCHS: 0
+  WEIGHT_DECAY: 0.0001
+  OPTIMIZER: "ADAMW"
+DATAAUG:
+  HFLIP: True
+  VFLIP: True
+  ROTATE: True
+  RGB: True
+  RANDOM_CROP: True
+  CENTERCROP: True
+  GAMA: False
+  SATURATION: False
+  MIXUP: False
+  CUTMIX: False
+  CUTBLUR: False
+VALIDATION:
+  STEP: 60
+  USE: 1
+  BATCH_SIZE: 8
+  NUM_WORKERS: 12
+  INTERVAL: 1
+  ITER: 1000
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/blur/train_goprol_blur.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/blur/train_goprol_sharp.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/blur/test_goprol_blur.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/blur/test_goprol_sharp.log"
+# RGB
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+PATCH:
+  STEP: 0
+  PATCH_SIZE: [416, 416]
+  MAX_NUMS: 400
+DATALOADER:
+  NUM_WORKERS: 12
+CHEKCPOINTS:
+  CKPT_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/goprol_wide_32_block_16_dilation_srcnn_416/ckpt"
+  LOGS_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/goprol_wide_32_block_16_dilation_srcnn_416/logs"
+DEBUG:
+  SHOW_SR_IMAGE: False
+  MAX_NUMBERS: 4
+  PADDING: 16

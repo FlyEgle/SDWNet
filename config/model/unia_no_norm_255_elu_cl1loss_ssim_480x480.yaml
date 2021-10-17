@@ -1,0 +1,70 @@
+# VDSR config for training
+MODEL:
+  PRETRAIN: False
+  WEIGHTS: "/data/remote/github_code/OneFace/models/weights/resnet50.pth"
+  BACKBONE:
+    NAME: "AtrousNetElu"
+  ACTIVATION: "elu"
+LOSS:
+  L1_Charbonnier: True 
+  EPS: 0.001
+  EDGE_LOSS: False
+  MS_SSIM: False
+  SSIM: True
+  ALPHA: 1
+TRAIN:
+  GRAD_ACCUMULATE: False
+  STEP: False
+  GRAD_ACCUMULATE_STEP: 4
+  MIX: False
+  FP16: False
+  SAMPLER: 1
+  BATCH_SIZE: 12
+  BASE_LR: 0.0003
+  MOMENTUM: 0.9
+  COSINE: True
+  MAX_EPOCHS: 120
+  WARM_EPOCHS: 0
+  WEIGHT_DECAY: 0.0001
+  OPTIMIZER: "ADAMW"
+DATAAUG:
+  HFLIP: True
+  VFLIP: True
+  ROTATE: True 
+  RGB: True
+  RANDOM_CROP: True
+  MIXUP: False
+  CUTMIX: False
+  CUTBLUR: False
+VALIDATION:
+  USE: 1
+  BATCH_SIZE: 32
+  NUM_WORKERS: 12
+  INTERVAL: 1
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/train/train_jpeg.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/train/train_gt.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/val_jpeg.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/val_gt.log"
+# RGB
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+PATCH:
+  STEP: 0
+  PATCH_SIZE: [480, 480]
+  MAX_NUMS: 400
+DATALOADER:
+  NUM_WORKERS: 24
+CHEKCPOINTS:
+  CKPT_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/AtrousNetElu_unia_480x480_adamw_cosine_l1closs_ssim_no_acc/ckpt"
+  LOGS_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/AtrousNetElu_unia_480x480_adamw_cosine_l1closs_ssim_no_acc/logs"
+DEBUG:
+  SHOW_SR_IMAGE: False
+  MAX_NUMBERS: 4
+  PADDING: 16

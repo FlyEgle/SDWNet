@@ -1,0 +1,42 @@
+# Inference for the model
+MODEL:
+  PRETRAIN: True
+  WEIGHTS: "/data/jiangmingchao/data/output_ckpt_with_logs/deblur_realblur_R_dataset/pretrain_from_goprol/ckpt/SR-AtrousNet_best_loss_1.9534518837928772.pth"
+  BACKBONE:
+    NAME: "AtrousNet_SRCNN_tail"
+    NUM_BLOCKS: 16
+    WIDTH: 32
+    EFFICIENT_ATTENTION: False
+    GC_ATTENTION: False
+  SRCNN:
+    ADD: False
+    SMOOTH: False
+  ACTIVATION: "elu"
+TRAIN:
+  SAMPLER: False
+  BATCH_SIZE: 1
+  TTA: "src"
+VALIDATION:
+  STEP: 0
+  USE: 1
+  BATCH_SIZE: 8
+  NUM_WORKERS: 8
+  INTERVAL: 1
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/dataset/file/realblurR/blur.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/file/realblurR/sharp.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/blur/test_goprol_blur.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/SR_dataset/GoProlL/file/blur/test_goprol_sharp.log"
+# RGB
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+DATALOADER:
+  NUM_WORKERS: 12
+SAVE:
+  SR_IMAGES: "/data/jiangmingchao/data/dataset/SR_localdata/goprol_baseline/realblur_R_pretrain_result"

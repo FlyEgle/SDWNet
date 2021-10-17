@@ -1,0 +1,46 @@
+# VDSR config for training
+MODEL:
+  WEIGHTS: "/data/remote/github_code/OneFace/models/weights/resnet50.pth"
+  BACKBONE:
+    NAME: "VDSR"
+  ACTIVATION: "relu"
+TRAIN:
+  BATCH_SIZE: 64
+  BASE_LR: 0.0003
+  MOMENTUM: 0.9
+  MAX_EPOCHS: 120
+  WARM_EPOCHS: 0
+  WEIGHT_DECAY: 0.0001
+  OPTIMIZER: "ADAM"
+VALIDATION:
+  USE: 1
+  BATCH_SIZE: 32
+  INTERVAL: 1
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/train/train_jpeg.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/train/train_gt.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/val_jpeg.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/val_gt.log"
+  # CONFIG_FILE: "/data/jiangmingchao/data/SR_NTIRE2021/config/VDSR.yaml"
+# RGB
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+PATCH:
+  STEP: 0
+  PATCH_SIZE: [96, 96]
+  MAX_NUMS: 400
+DATALOADER:
+  NUM_WORKERS: 8
+CHEKCPOINTS:
+  CKPT_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/unia_48x48/ckpt"
+  LOGS_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/unia_48x48/logs"
+DEBUG:
+  SHOW_SR_IMAGE: True
+  MAX_NUMBERS: 4
+  PADDING: 16

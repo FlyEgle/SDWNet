@@ -1,0 +1,13 @@
+# Inference for the model
+TRAIN:
+  SAMPLER: False
+  BATCH_SIZE: 8
+  TTA: "src"
+SEED: 100
+DATA:
+  LR_FOLDER: "/data/jiangmingchao/data/dataset/SR_localdata/test_300"
+# RGB
+DATALOADER:
+  NUM_WORKERS: 12
+SAVE:
+  SR_IMAGES: "/data/jiangmingchao/data/dataset/SR_localdata/test_3000_tta_data_1/src"

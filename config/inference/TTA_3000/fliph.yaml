@@ -1,0 +1,35 @@
+# Inference for the model
+MODEL:
+  PRETRAIN: True
+  WEIGHTS: "/data/jiangmingchao/data/output_ckpt_with_logs/64w_2epoch_4e-5_pretrain_no_sr/ckpt/AtrousNetEluUpWide_best_psnr_27.845035552978516.pth"
+  BACKBONE:
+    NAME: "AtrousNetEluUpWide"
+  ACTIVATION: "elu"
+TRAIN:
+  SAMPLER: False
+  BATCH_SIZE: 8
+  TTA: "flip_h"
+VALIDATION:
+  STEP: 0
+  USE: 1
+  BATCH_SIZE: 8
+  NUM_WORKERS: 8
+  INTERVAL: 1
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/dataset/SR_localdata/tta_3000.log"
+    HR_PATH: "/data/jiangmingchao/data/dataset/SR_localdata/hr_val_300.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/test_jpeg_from_val.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/test_gt_from_val.log"
+# RGB
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+DATALOADER:
+  NUM_WORKERS: 12
+SAVE:
+  SR_IMAGES: "/data/jiangmingchao/data/dataset/SR_localdata/test_3000_tta_data/flip_h"

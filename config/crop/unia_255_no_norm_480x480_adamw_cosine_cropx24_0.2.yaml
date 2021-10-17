@@ -1,0 +1,60 @@
+# VDSR config for training
+MODEL:
+  PRETRAIN: True
+  WEIGHTS: "/data/jiangmingchao/data/output_ckpt_with_logs/unia_480x480_adamw_cosine_cropx24_0.1/ckpt/SR-AtrousNet_best_psnr_27.014245986938477.pth"
+  BACKBONE:
+    NAME: "VDSR"
+  ACTIVATION: "relu"
+TRAIN:
+  GRAD_ACCUMULATE: True
+  GRAD_ACCUMULATE_STEP: 2
+  MIX: False
+  FP16: False
+  SAMPLER: 0.2
+  BATCH_SIZE: 12
+  BASE_LR: 0.0003
+  MOMENTUM: 0.9
+  COSINE: True
+  MAX_EPOCHS: 90
+  WARM_EPOCHS: 0
+  WEIGHT_DECAY: 0.0001
+  OPTIMIZER: "ADAMW"
+DATAAUG:
+  HFLIP: True
+  VFLIP: True
+  ROTATE: True 
+  RGB: True
+  RANDOM_CROP: False
+  MIXUP: False
+  CUTMIX: False
+  CUTBLUR: False
+VALIDATION:
+  USE: 1
+  BATCH_SIZE: 32
+  INTERVAL: 1
+SEED: 100
+DATA:
+  TRAIN:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/train/train_blur_jpeg_crop.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/train/train_sharp_crop.log"
+  VALIDATION:
+    LR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/val_jpeg.log"
+    HR_PATH: "/data/jiangmingchao/data/SR_NTIRE2021/data/val/val_gt.log"
+INPUT:
+  MEAN: [111.35, 110.87, 107.35]
+  STD: [64.24, 63.09, 67.95]
+  NORM: False
+  RANGE: 255
+PATCH:
+  STEP: 0
+  PATCH_SIZE: [480, 480]
+  MAX_NUMS: 400
+DATALOADER:
+  NUM_WORKERS: 16
+CHEKCPOINTS:
+  CKPT_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/unia_480x480_adamw_cosine_cropx24_0.2/ckpt"
+  LOGS_PATH: "/data/jiangmingchao/data/output_ckpt_with_logs/unia_480x480_adamw_cosine_cropx24_0.2/logs"
+DEBUG:
+  SHOW_SR_IMAGE: False
+  MAX_NUMBERS: 4
+  PADDING: 16
